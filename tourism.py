@@ -8,11 +8,11 @@ connection = connector.connect(host = 'localhost', user = 'root', password = '12
 cursor = connection.cursor()
 
 # Database creation
-cr_db = "create database if not exists tourism"
+cr_db = "create database if not exists tourism11"
 cursor.execute(cr_db)
 
 #use databse
-us_db = "use tourism"
+us_db = "use tourism11"
 cursor.execute(us_db)
 
 #region user Defined functions
@@ -22,7 +22,6 @@ def createtabel(tbname, columns):
     cursor.execute(Query)
 
 #endregion
-
 
 #region tabel creation
 createtabel('city', '(CityID varchar(50) primary key, CityName varchar(1000), CountryId varchar(50))')
@@ -68,6 +67,7 @@ path_user = r"D:\PYTHON\VSCODE-PY\TOURISM_PROJECT\SOURCE DATA\User.xlsx"
 
 insert(path_city,'city')
 insert(path_continent, 'continent')
+insert(path_country, 'country')
 insert(path_item,'item')
 insert(path_mode, 'mode')
 insert(path_region, 'region')
@@ -78,15 +78,22 @@ insert(path_user, 'user')
 print("Data Transfered to database")
 
 
+query_eda = """select a.transactionid, a.userid,  k.country as 'User Country', l.region as 'User Region', m.cityname as 'User City',
+a.visityear, a.visitmonth, g.visitmode, b.attraction, b.attractionaddress, c.cityname, e.country, j.contenent, a.rating     from transaction a
+inner join item b on a. AttractionId = b.AttractionId
+inner join city c on b.AttractionCityId = c.CityID
+inner join type d on b.AttractionTypeId = d.AttractionTypeId
+inner join country e on c.countryid = e.countryid
+inner join user f on a.userid = f.userid
+inner join mode g on a.visitmode = g.visitmodeid
+inner join region h on e.regionid = h.regionid
+inner join continent j on h.contentid = j.contenentid
+inner join country k on f.countryid = k.countryid
+inner join region l on k.regionid = l.regionid
+inner join city m on CAST( f.cityid AS signed)  = m.CityID"""
+cursor.execute(query_eda)
+columns = [col[0] for col in cursor.description]
+rows = cursor.fetchall()
 
-
-
-
-
-
-
-
-
-
-
-
+DF_EDA = pd.DataFrame(rows,  columns=columns)
+print(DF_EDA)
