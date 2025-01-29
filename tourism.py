@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 import pandas as pd
 import openpyxl
+import numpy as np
 connection = connector.connect(host = 'localhost', user = 'root', password = '1234')
 cursor = connection.cursor()
 
@@ -21,12 +22,10 @@ def createtabel(tbname, columns):
     cursor.execute(Query)
 
 #endregion
-path_city = r"D:\Python Projects\Production\Tourism\City.xlsx"
-df2 = pd.read_excel(path_city)
-print(df2)
+
 
 #region tabel creation
-createtabel('city', '(CityID varchar(50) primary key, CityName varchar(255), CountryId varchar(50))')
+createtabel('city', '(CityID varchar(50) primary key, CityName varchar(1000), CountryId varchar(50))')
 createtabel('continent', '(ContenentId varchar(50) primary key, Contenent varchar(255))')
 createtabel('country', '(CountryId varchar(50) primary key, Country varchar(255), RegionId varchar(50))')
 createtabel('Item', '(AttractionId varchar(50) primary key, AttractionCityId varchar(50), AttractionTypeId varchar(50), Attraction varchar(255), AttractionAddress varchar(255))')
@@ -39,6 +38,17 @@ createtabel('User', '(UserId varchar(50) primary key, ContenentId varchar(50), R
 
 def insert(path, tablename):
     df = pd.read_excel(path)
+    df = df.dropna()
+    df = df.replace("'", "", regex=True)
+    df = df.where(pd.notnull(df), None)
+    for col in df.columns:
+        type = df[col].dtype
+        if np.issubdtype(type, np.int64):
+            df[col] = df[col].astype('Int32')
+        elif np.issubdtype(type, np.float64):
+            df[col] = df[col].astype(float)
+        elif np.issubdtype(type, np.bool_):
+            df[col] = df[col].astype(bool)
     columns = ", ".join(df.columns)
     s = ", ".join(['%s' for i in range (len(df.columns))])
     query = f"insert into {tablename} ({columns}) values ({s})"
@@ -46,18 +56,17 @@ def insert(path, tablename):
     cursor.executemany(query, value)
     connection.commit()
 
-path_city = r"D:\Python Projects\Production\Tourism\City.xlsx"
-path_continent = r"D:\Python Projects\Production\Tourism\Continent.xlsx"
-path_country = r"D:\Python Projects\Production\Tourism\Country.xlsx"
-path_item = r"D:\Python Projects\Production\Tourism\Item.xlsx"
-path_mode = r"D:\Python Projects\Production\Tourism\Mode.xlsx"
-path_region = r"D:\Python Projects\Production\Tourism\Region.xlsx"
-path_transaction = r"D:\Python Projects\Production\Tourism\Transaction.xlsx"
-path_type = r"D:\Python Projects\Production\Tourism\Type.xlsx"
-path_user = r"D:\Python Projects\Production\Tourism\User.xlsx"
+path_city = r"D:\PYTHON\VSCODE-PY\TOURISM_PROJECT\SOURCE DATA\City.xlsx"
+path_continent = r"D:\PYTHON\VSCODE-PY\TOURISM_PROJECT\SOURCE DATA\Continent.xlsx"
+path_country = r"D:\PYTHON\VSCODE-PY\TOURISM_PROJECT\SOURCE DATA\Country.xlsx"
+path_item = r"D:\PYTHON\VSCODE-PY\TOURISM_PROJECT\SOURCE DATA\Item.xlsx"
+path_mode = r"D:\PYTHON\VSCODE-PY\TOURISM_PROJECT\SOURCE DATA\Mode.xlsx"
+path_region = r"D:\PYTHON\VSCODE-PY\TOURISM_PROJECT\SOURCE DATA\Region.xlsx"
+path_transaction = r"D:\PYTHON\VSCODE-PY\TOURISM_PROJECT\SOURCE DATA\Transaction.xlsx"
+path_type = r"D:\PYTHON\VSCODE-PY\TOURISM_PROJECT\SOURCE DATA\Type.xlsx"
+path_user = r"D:\PYTHON\VSCODE-PY\TOURISM_PROJECT\SOURCE DATA\User.xlsx"
 
 insert(path_city,'city')
-print("city info added")
 insert(path_continent, 'continent')
 insert(path_item,'item')
 insert(path_mode, 'mode')
