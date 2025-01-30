@@ -4,15 +4,18 @@ import streamlit as st
 import pandas as pd
 import openpyxl
 import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.preprocessing import LabelEncoder
 connection = connector.connect(host = 'localhost', user = 'root', password = '1234')
 cursor = connection.cursor()
 
 # Database creation
-cr_db = "create database if not exists tourism11"
+cr_db = "create database if not exists tourism"
 cursor.execute(cr_db)
 
 #use databse
-us_db = "use tourism11"
+us_db = "use tourism"
 cursor.execute(us_db)
 
 #region user Defined functions
@@ -76,6 +79,31 @@ insert(path_type, 'type')
 insert(path_user, 'user')
 
 print("Data Transfered to database")
+
+
+query_df = """select a.transactionid, a.userid,  k.countryid as 'User Country', l.regionID as 'User Region', m.cityID as 'User City',
+a.visityear, a.visitmonth, a.visitmode, a.attractionid  ,  c.cityid, e.countryid, j.contenentid, a.rating     from transaction a
+inner join item b on a. AttractionId = b.AttractionId
+inner join city c on b.AttractionCityId = c.CityID
+inner join type d on b.AttractionTypeId = d.AttractionTypeId
+inner join country e on c.countryid = e.countryid
+inner join user f on a.userid = f.userid
+inner join mode g on a.visitmode = g.visitmodeid
+inner join region h on e.regionid = h.regionid
+inner join continent j on h.contentid = j.contenentid
+inner join country k on f.countryid = k.countryid
+inner join region l on k.regionid = l.regionid
+inner join city m on CAST( f.cityid AS signed)  = m.CityID"""
+
+cursor.execute(query_df)
+columns = [col[0] for col in cursor.description]
+rows = cursor.fetchall()
+
+DF_REG = pd.DataFrame(rows,  columns=columns)
+print(DF_REG)
+
+
+
 
 
 query_eda = """select a.transactionid, a.userid,  k.country as 'User Country', l.region as 'User Region', m.cityname as 'User City',
